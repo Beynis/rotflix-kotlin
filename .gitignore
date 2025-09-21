@@ -1,27 +1,42 @@
-# Compiled class file
+# --- Build artifacts ---
+**/build/
+**/captures/
+**/.cxx/
+**/externalNativeBuild/
+.cxx/
+bin/
+gen/
+out/
+
+# --- Packages / outputs ---
+*.apk
+*.ap_
+*.aab
+*.dex
 *.class
 
-# Log file
+# --- Gradle ---
+.gradle/
+# Keep gradle.properties if you use it for non-secrets.
+# If you keep local overrides, ignore a local-only variant:
+gradle.properties.local
+
+# --- Local Android SDK paths & app-specific local config ---
+local.properties
+
+# --- IDE / OS ---
+.idea/
+*.iml
+*.iws
+.DS_Store
+
+# --- Logs / profiling ---
 *.log
+*.hprof
 
-# BlueJ files
-*.ctxt
+# --- Keystores (DON'T COMMIT) ---
+*.jks
+*.keystore
 
-# Mobile Tools for Java (J2ME)
-.mtj.tmp/
-
-# Package Files #
-*.jar
-*.war
-*.nar
-*.ear
-*.zip
-*.tar.gz
-*.rar
-
-# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
-hs_err_pid*
-replay_pid*
-
-# Kotlin Gradle plugin data, see https://kotlinlang.org/docs/whatsnew20.html#new-directory-for-kotlin-data-in-gradle-projects
+# --- Kotlin Gradle plugin cache ---
 .kotlin/
