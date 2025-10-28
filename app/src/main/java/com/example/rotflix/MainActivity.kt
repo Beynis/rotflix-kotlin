@@ -1,4 +1,9 @@
-// MainActivity.kt
+/**
+ * MainActivity.kt
+ *
+ * Main entry point for the Rotflix Android application.
+ * This activity hosts the entire Compose UI and sets up the app's navigation.
+ */
 package com.example.rotflix
 
 import android.os.Bundle
@@ -29,30 +34,28 @@ import com.example.rotflix.network.TmdbConfiguration
 import com.example.rotflix.ui.ApiResult // Import your ApiResult
 import com.example.rotflix.ui.MainViewModel // Import your ViewModel
 import com.example.rotflix.ui.theme.RotflixTheme
+import com.example.rotflix.RotflixApp
 
+/**
+ * Main activity for the Rotflix application.
+ * Sets up the Jetpack Compose UI with the RotflixApp composable as the root.
+ */
 class MainActivity : ComponentActivity() {
-    // Instantiate the ViewModel using the viewModels delegate
-    private val viewModel: MainViewModel by viewModels()
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
-        setContent {
-            RotflixTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    // Collect the state from the ViewModel
-                    val configResult by viewModel.configurationState.collectAsState()
-
-                    ConfigurationScreen(
-                        configResult = configResult,
-                        modifier = Modifier.padding(innerPadding)
-                    )
-                }
-            }
-        }
+        setContent { RotflixApp() }
     }
 }
 
+
+/**
+ * Sample screen demonstrating TMDB API configuration loading.
+ * This is a test/example screen showing different API result states (Loading, Success, Error).
+ * Not currently used in the main app flow but useful for testing API connectivity.
+ *
+ * @param configResult The API result containing TMDB configuration or error state
+ * @param modifier Optional modifier for customizing the layout
+ */
 @Composable
 fun ConfigurationScreen(configResult: ApiResult<TmdbConfiguration>, modifier: Modifier = Modifier) {
     Surface(
