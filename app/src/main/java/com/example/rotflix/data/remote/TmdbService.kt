@@ -64,4 +64,16 @@ interface TmdbService {
         @Query("api_key") apiKey: String
     ): TmdbCreditsResponse
 
+    @GET("movie/{movie_id}/watch/providers")
+    suspend fun getMovieWatchProviders(
+        @Path("movie_id") id: Int,
+        @Query("api_key") apiKey: String
+    ): TmdbWatchProvidersResponse
+
+    @GET("tv/{tv_id}/watch/providers")
+    suspend fun getTvWatchProviders(
+        @Path("tv_id") id: Int,
+        @Query("api_key") apiKey: String
+    ): TmdbWatchProvidersResponse
+
 }

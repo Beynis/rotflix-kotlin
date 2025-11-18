@@ -82,9 +82,17 @@ fun RotflixApp() {
             composable("detail/{type}/{id}") { backStack ->
                 val type = MediaType.valueOf(backStack.arguments?.getString("type")!!)
                 val id = backStack.arguments?.getString("id")!!
+                // Get the region from BrowseViewModel if the browse route exists in back stack
+                val browseEntry = nav.currentBackStack.value.find { it.destination.route == "browse/{type}" }
+                val region = if (browseEntry != null) {
+                    val browseVm: BrowseViewModel = viewModel(viewModelStoreOwner = browseEntry)
+                    browseVm.filters.region
+                } else {
+                    null
+                }
                 val vm = remember { DetailViewModel(type) }
-                LaunchedEffect(id) { vm.load(id) }
-                DetailScreen(item = vm.item)
+                LaunchedEffect(id, region) { vm.load(id, region) }
+                DetailScreen(item = vm.item, isLoading = vm.isLoading, error = vm.error)
             }
         }
     }

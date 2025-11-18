@@ -1,5 +1,6 @@
 package com.example.rotflix.ui.detail
 
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -31,14 +32,37 @@ class DetailViewModel(
         private set
 
     /**
+     * Loading state indicator
+     */
+    var isLoading by mutableStateOf(false)
+        private set
+
+    /**
+     * Error message if loading failed
+     */
+    var error by mutableStateOf<String?>(null)
+        private set
+
+    /**
      * Loads a specific media item by its ID.
      * Updates the item property with the found item, or null if not found.
      *
      * @param id The unique identifier of the media item to load
+     * @param region Optional region code to check provider availability
      */
-    fun load(id: String) {
+    fun load(id: String, region: String? = null) {
         viewModelScope.launch {
-            item = repo.getById(type, id)
+            isLoading = true
+            error = null
+            Log.d("DetailViewModel", "Loading $type with ID: $id, region: $region")
+            item = repo.getById(type, id, region)
+            isLoading = false
+            if (item == null) {
+                error = "Failed to load details. Please try again."
+                Log.e("DetailViewModel", "Failed to load $type with ID: $id")
+            } else {
+                Log.d("DetailViewModel", "Successfully loaded: ${item?.title}")
+            }
         }
     }
 }

@@ -48,9 +48,10 @@ interface MediaRepository {
      *
      * @param type The type of media (MOVIE or TV)
      * @param id The unique identifier of the media item
+     * @param region Optional ISO 3166-1 country code to check provider availability
      * @return The media item if found, null otherwise
      */
-    suspend fun getById(type: MediaType, id: String): MediaItem?
+    suspend fun getById(type: MediaType, id: String, region: String? = null): MediaItem?
 }
 
 /**

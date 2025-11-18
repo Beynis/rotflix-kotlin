@@ -1,5 +1,6 @@
 package com.example.rotflix.data.remote
 
+import android.util.Log
 import com.example.rotflix.BuildConfig
 import com.example.rotflix.data.model.BrowseFilters
 import com.example.rotflix.data.model.MediaItem
@@ -92,55 +93,130 @@ class TmdbMediaRepository : MediaRepository {
         }
     }
 
-    override suspend fun getById(type: MediaType, id: String): MediaItem? {
+    override suspend fun getById(type: MediaType, id: String, region: String?): MediaItem? {
         return try {
+            Log.d("TmdbMediaRepository", "Fetching details for $type with ID: $id")
             when (type) {
                 MediaType.MOVIE -> {
-                    // Fetch both movie details AND credits
+                    // Fetch movie details, credits, AND watch providers
                     val movie = api.getMovieDetails(id.toInt(), apiKey)
                     val credits = api.getMovieCredits(id.toInt(), apiKey)
+                    val providers = try {
+                        api.getMovieWatchProviders(id.toInt(), apiKey)
+                    } catch (e: Exception) {
+                        Log.w("TmdbMediaRepository", "Failed to fetch watch providers", e)
+                        null
+                    }
 
-                    // Combine both into a MediaItem
-                    movie.toMediaItem(credits)
+                    // Combine all into a MediaItem
+                    movie.toMediaItem(credits, providers, region)
                 }
                 MediaType.TV -> {
-                    // Fetch both TV details AND credits
+                    // Fetch TV details, credits, AND watch providers
                     val tv = api.getTvDetails(id.toInt(), apiKey)
                     val credits = api.getTvCredits(id.toInt(), apiKey)
+                    val providers = try {
+                        api.getTvWatchProviders(id.toInt(), apiKey)
+                    } catch (e: Exception) {
+                        Log.w("TmdbMediaRepository", "Failed to fetch watch providers", e)
+                        null
+                    }
 
-                    // Combine both into a MediaItem
-                    tv.toMediaItem(credits)
+                    // Combine all into a MediaItem
+                    tv.toMediaItem(credits, providers, region)
                 }
             }
         } catch (e: Exception) {
+            Log.e("TmdbMediaRepository", "Error fetching details for $type ID $id", e)
             null // Return null if item not found or error occurs
         }
     }
 
 
+    // Helper function to extract provider names from watch providers response
+    private fun extractProviders(providersResponse: TmdbWatchProvidersResponse?, region: String?): String? {
+        if (providersResponse == null) return null
+
+        // Use selected region, fall back to US, then any available country
+        val selectedRegion = region ?: "US"
+        val countryData = providersResponse.results[selectedRegion]
+            ?: if (region != null) null else providersResponse.results["US"]
+            ?: providersResponse.results.values.firstOrNull()
+
+        // If no providers for the selected region, return "not available" message
+        if (region != null && countryData == null) {
+            val countryName = getCountryName(region)
+            return "Not available in $countryName"
+        }
+
+        // Prioritize streaming (flatrate), then buy, then rent
+        val providers = countryData?.flatrate
+            ?: countryData?.buy
+            ?: countryData?.rent
+
+        // Return comma-separated provider names, or null if no providers
+        return providers?.take(3)?.joinToString(", ") { it.provider_name }
+    }
+
+    // Helper function to convert country code to country name
+    private fun getCountryName(code: String): String {
+        return when (code) {
+            "AU" -> "Australia"
+            "BR" -> "Brazil"
+            "CA" -> "Canada"
+            "CN" -> "China"
+            "DK" -> "Denmark"
+            "FR" -> "France"
+            "DE" -> "Germany"
+            "IN" -> "India"
+            "IT" -> "Italy"
+            "JP" -> "Japan"
+            "MX" -> "Mexico"
+            "NL" -> "Netherlands"
+            "NO" -> "Norway"
+            "PL" -> "Poland"
+            "RU" -> "Russia"
+            "KR" -> "South Korea"
+            "ES" -> "Spain"
+            "SE" -> "Sweden"
+            "CH" -> "Switzerland"
+            "GB" -> "United Kingdom"
+            "US" -> "United States"
+            else -> code
+        }
+    }
+
     // Extension function to convert TMDB response to MediaItem
-    private fun TmdbMovieResponse.toMediaItem(credits: TmdbCreditsResponse? = null) = MediaItem(
+    private fun TmdbMovieResponse.toMediaItem(
+        credits: TmdbCreditsResponse? = null,
+        watchProviders: TmdbWatchProvidersResponse? = null,
+        region: String? = null
+    ) = MediaItem(
         id = id.toString(),
         type = MediaType.MOVIE,
         title = title,
-        description = overview,
+        description = overview ?: "No description available",
         posterUrl = poster_path?.let { imageBaseUrl + it },
         imdbRating = vote_average,
-        provider = null, // TMDB doesn't include provider in basic search
-        releaseYear = release_date.take(4).toIntOrNull() ?: 0,
+        provider = extractProviders(watchProviders, region),
+        releaseYear = release_date?.take(4)?.toIntOrNull() ?: 0,
         genres = emptyList(), // Convert genre_ids to names
         cast = credits?.cast?.take(5)?.map { it.name } ?: emptyList() // Top 5 cast members
     )
 
-    private fun TmdbTvResponse.toMediaItem(credits: TmdbCreditsResponse? = null) = MediaItem(
+    private fun TmdbTvResponse.toMediaItem(
+        credits: TmdbCreditsResponse? = null,
+        watchProviders: TmdbWatchProvidersResponse? = null,
+        region: String? = null
+    ) = MediaItem(
         id = id.toString(),
         type = MediaType.TV,
         title = name,
-        description = overview,
+        description = overview ?: "No description available",
         posterUrl = poster_path?.let { imageBaseUrl + it },
         imdbRating = vote_average,
-        provider = null,
-        releaseYear = first_air_date.take(4).toIntOrNull() ?: 0,
+        provider = extractProviders(watchProviders, region),
+        releaseYear = first_air_date?.take(4)?.toIntOrNull() ?: 0,
         genres = emptyList(),
         cast = credits?.cast?.take(5)?.map { it.name } ?: emptyList()
 
