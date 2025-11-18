@@ -58,6 +58,7 @@ fun RotflixApp() {
                     onSetRating = vm::setMinRating,
                     onSetYear = vm::setReleaseYear,
                     onToggleProvider = vm::toggleProvider,
+                    onSetRegion = vm::setRegion,
                     onGoResults = { nav.navigate("results/$type") }
                 )
             }
@@ -71,7 +72,9 @@ fun RotflixApp() {
                 LaunchedEffect(browseVm.filters) { vm.load(browseVm.filters) }
                 ResultsScreen(
                     items = vm.results,
-                    onOpen = { id -> nav.navigate("detail/$type/$id") }
+                    onOpen = { id -> nav.navigate("detail/$type/$id") },
+                    isLoading = vm.isLoading,
+                    error = vm.error
                 )
             }
             // Route 4: Detail Screen

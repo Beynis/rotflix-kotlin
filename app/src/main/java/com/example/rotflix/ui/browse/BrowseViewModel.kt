@@ -5,8 +5,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import com.example.rotflix.data.model.BrowseFilters
-import com.example.rotflix.data.model.FakeMediaRepository
+//import com.example.rotflix.data.model.FakeMediaRepository
 import com.example.rotflix.data.model.MediaRepository
+import com.example.rotflix.data.remote.TmdbMediaRepository
 
 /**
  * ViewModel for the Browse screen where users select filter criteria.
@@ -17,7 +18,7 @@ import com.example.rotflix.data.model.MediaRepository
  *
  * @property repo Repository for media data access (defaults to FakeMediaRepository)
  */
-class BrowseViewModel(private val repo: MediaRepository = FakeMediaRepository()) : ViewModel() {
+class BrowseViewModel(private val repo: MediaRepository = TmdbMediaRepository()) : ViewModel() {
     /**
      * Current filter state. Exposed as read-only to the UI.
      * Use the provided update methods to modify filters.
@@ -49,4 +50,7 @@ class BrowseViewModel(private val repo: MediaRepository = FakeMediaRepository())
     fun toggleProvider(p: String) { filters = filters.copy(
         providers = filters.providers.toMutableSet().apply { if (!add(p)) remove(p) }.toSet()
     ) }
+
+    /** Sets the region filter. Pass null to clear the region filter */
+    fun setRegion(r: String?) { filters = filters.copy(region = r) }
 }

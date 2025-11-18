@@ -20,8 +20,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
 import com.example.rotflix.data.model.MediaItem
 
 /**
@@ -34,13 +36,32 @@ import com.example.rotflix.data.model.MediaItem
  * @param onOpen Callback when user taps a result card. Receives the media item's ID
  */
 @Composable
-fun ResultsScreen(items: List<MediaItem>, onOpen: (String) -> Unit) {
-    if (items.isEmpty()) {
-        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text("No results. Try adjusting filters.")
+fun ResultsScreen(
+    items: List<MediaItem>,
+    onOpen: (String) -> Unit,
+    isLoading: Boolean = false,
+    error: String? = null
+) {
+    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        when {
+            isLoading -> {
+                androidx.compose.material3.CircularProgressIndicator()
+            }
+            error != null -> {
+                Text("Error: $error", color = androidx.compose.material3.MaterialTheme.colorScheme.error)
+            }
+            items.isEmpty() -> {
+                Text("No results. Try adjusting filters or search terms.")
+            }
+            else -> {
+                ResultsList(items, onOpen)
+            }
         }
-        return
     }
+}
+
+@Composable
+private fun ResultsList(items: List<MediaItem>, onOpen: (String) -> Unit) {
     LazyColumn(
         contentPadding = PaddingValues(12.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -63,10 +84,12 @@ fun ResultCard(item: MediaItem, onClick: () -> Unit) {
     ElevatedCard(onClick = onClick, modifier = Modifier.fillMaxWidth()) {
         Row(Modifier.padding(12.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             // Poster (if you have URLs, load with Coil)
-            Box(
-                Modifier.size(72.dp).clip(RoundedCornerShape(8.dp)).background(MaterialTheme.colorScheme.surfaceVariant),
-                contentAlignment = Alignment.Center
-            ) { Text(item.title.take(1)) }
+            AsyncImage(
+                model = item.posterUrl,
+                contentDescription = item.title,
+                modifier = Modifier.size(72.dp).clip(RoundedCornerShape(8.dp)),
+                contentScale = ContentScale.Crop
+            )
 
             Column(Modifier.weight(1f)) {
                 Text(item.title, style = MaterialTheme.typography.titleMedium)
