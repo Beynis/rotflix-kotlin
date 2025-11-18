@@ -10,10 +10,10 @@ package com.example.rotflix.data.model
  * @property description Plot summary or synopsis
  * @property posterUrl URL to the poster image. Null if no poster is available
  * @property imdbRating IMDb rating score (0.0 to 10.0). Null if not rated
- * @property provider Streaming service where this content is available (e.g., "Netflix")
+ * @property providers List of streaming providers where this content is available
  * @property releaseYear Year the content was released
  * @property genres List of genre tags (e.g., ["Drama", "Sci-Fi"])
- * @property cast List of main cast member names
+ * @property cast List of main cast members with their profile pictures
  */
 data class MediaItem(
     val id: String,
@@ -22,10 +22,32 @@ data class MediaItem(
     val description: String,
     val posterUrl: String?,
     val imdbRating: Double?,
-    val provider: String?,
+    val providers: List<Provider>,
     val releaseYear: Int,
     val genres: List<String>,
-    val cast: List<String>
+    val cast: List<CastMember>
+)
+
+/**
+ * Represents a cast member in a media item
+ *
+ * @property name Actor's name
+ * @property profileUrl URL to the actor's profile picture. Null if no picture is available
+ */
+data class CastMember(
+    val name: String,
+    val profileUrl: String?
+)
+
+/**
+ * Represents a streaming provider
+ *
+ * @property name Provider's name (e.g., "Netflix", "Amazon Prime Video")
+ * @property logoUrl URL to the provider's logo image
+ */
+data class Provider(
+    val name: String,
+    val logoUrl: String?
 )
 
 /**

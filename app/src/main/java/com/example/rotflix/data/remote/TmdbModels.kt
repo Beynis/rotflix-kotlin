@@ -31,7 +31,8 @@ data class TmdbCreditsResponse(
 )
 
 data class TmdbCastMember(
-    val name: String
+    val name: String,
+    val profile_path: String?
 )
 
 data class TmdbWatchProvidersResponse(
@@ -47,5 +48,6 @@ data class TmdbCountryProviders(
 
 data class TmdbProvider(
     val provider_name: String,
-    val provider_id: Int
+    val provider_id: Int,
+    val logo_path: String?
 )

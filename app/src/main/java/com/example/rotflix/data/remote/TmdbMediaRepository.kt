@@ -3,9 +3,11 @@ package com.example.rotflix.data.remote
 import android.util.Log
 import com.example.rotflix.BuildConfig
 import com.example.rotflix.data.model.BrowseFilters
+import com.example.rotflix.data.model.CastMember
 import com.example.rotflix.data.model.MediaItem
 import com.example.rotflix.data.model.MediaRepository
 import com.example.rotflix.data.model.MediaType
+import com.example.rotflix.data.model.Provider
 
 class TmdbMediaRepository : MediaRepository {
     private val api = RetrofitInstance.api
@@ -133,9 +135,9 @@ class TmdbMediaRepository : MediaRepository {
     }
 
 
-    // Helper function to extract provider names from watch providers response
-    private fun extractProviders(providersResponse: TmdbWatchProvidersResponse?, region: String?): String? {
-        if (providersResponse == null) return null
+    // Helper function to extract providers with logos from watch providers response
+    private fun extractProviders(providersResponse: TmdbWatchProvidersResponse?, region: String?): List<Provider> {
+        if (providersResponse == null) return emptyList()
 
         // Use selected region, fall back to US, then any available country
         val selectedRegion = region ?: "US"
@@ -143,19 +145,24 @@ class TmdbMediaRepository : MediaRepository {
             ?: if (region != null) null else providersResponse.results["US"]
             ?: providersResponse.results.values.firstOrNull()
 
-        // If no providers for the selected region, return "not available" message
+        // If no providers for the selected region, return special "not available" provider
         if (region != null && countryData == null) {
             val countryName = getCountryName(region)
-            return "Not available in $countryName"
+            return listOf(Provider(name = "Not available in $countryName", logoUrl = null))
         }
 
         // Prioritize streaming (flatrate), then buy, then rent
-        val providers = countryData?.flatrate
+        val tmdbProviders = countryData?.flatrate
             ?: countryData?.buy
             ?: countryData?.rent
 
-        // Return comma-separated provider names, or null if no providers
-        return providers?.take(3)?.joinToString(", ") { it.provider_name }
+        // Convert to Provider objects with logo URLs
+        return tmdbProviders?.take(3)?.map { tmdbProvider ->
+            Provider(
+                name = tmdbProvider.provider_name,
+                logoUrl = tmdbProvider.logo_path?.let { imageBaseUrl + it }
+            )
+        } ?: emptyList()
     }
 
     // Helper function to convert country code to country name
@@ -198,10 +205,15 @@ class TmdbMediaRepository : MediaRepository {
         description = overview ?: "No description available",
         posterUrl = poster_path?.let { imageBaseUrl + it },
         imdbRating = vote_average,
-        provider = extractProviders(watchProviders, region),
+        providers = extractProviders(watchProviders, region),
         releaseYear = release_date?.take(4)?.toIntOrNull() ?: 0,
         genres = emptyList(), // Convert genre_ids to names
-        cast = credits?.cast?.take(5)?.map { it.name } ?: emptyList() // Top 5 cast members
+        cast = credits?.cast?.take(5)?.map {
+            CastMember(
+                name = it.name,
+                profileUrl = it.profile_path?.let { path -> imageBaseUrl + path }
+            )
+        } ?: emptyList() // Top 5 cast members
     )
 
     private fun TmdbTvResponse.toMediaItem(
@@ -215,10 +227,15 @@ class TmdbMediaRepository : MediaRepository {
         description = overview ?: "No description available",
         posterUrl = poster_path?.let { imageBaseUrl + it },
         imdbRating = vote_average,
-        provider = extractProviders(watchProviders, region),
+        providers = extractProviders(watchProviders, region),
         releaseYear = first_air_date?.take(4)?.toIntOrNull() ?: 0,
         genres = emptyList(),
-        cast = credits?.cast?.take(5)?.map { it.name } ?: emptyList()
+        cast = credits?.cast?.take(5)?.map {
+            CastMember(
+                name = it.name,
+                profileUrl = it.profile_path?.let { path -> imageBaseUrl + path }
+            )
+        } ?: emptyList()
 
     )
 

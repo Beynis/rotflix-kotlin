@@ -42,20 +42,24 @@ fun ResultsScreen(
     isLoading: Boolean = false,
     error: String? = null
 ) {
-    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        when {
-            isLoading -> {
+    when {
+        isLoading -> {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 androidx.compose.material3.CircularProgressIndicator()
             }
-            error != null -> {
+        }
+        error != null -> {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Text("Error: $error", color = androidx.compose.material3.MaterialTheme.colorScheme.error)
             }
-            items.isEmpty() -> {
+        }
+        items.isEmpty() -> {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Text("No results. Try adjusting filters or search terms.")
             }
-            else -> {
-                ResultsList(items, onOpen)
-            }
+        }
+        else -> {
+            ResultsList(items, onOpen)
         }
     }
 }
@@ -97,7 +101,22 @@ fun ResultCard(item: MediaItem, onClick: () -> Unit) {
             }
             Column(horizontalAlignment = Alignment.End) {
                 Text("IMDb ${item.imdbRating ?: "-"}", style = MaterialTheme.typography.labelLarge)
-                Text(item.provider ?: "-", style = MaterialTheme.typography.labelMedium)
+                // Show provider logo or text
+                if (item.providers.isNotEmpty()) {
+                    val provider = item.providers.first()
+                    if (provider.logoUrl != null) {
+                        AsyncImage(
+                            model = provider.logoUrl,
+                            contentDescription = provider.name,
+                            modifier = Modifier.size(30.dp),
+                            contentScale = ContentScale.Fit
+                        )
+                    } else {
+                        Text(provider.name, style = MaterialTheme.typography.labelMedium, maxLines = 1)
+                    }
+                } else {
+                    Text("-", style = MaterialTheme.typography.labelMedium)
+                }
             }
         }
     }
