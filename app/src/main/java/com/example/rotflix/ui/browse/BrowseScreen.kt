@@ -105,6 +105,11 @@ fun BrowseScreen(
     var countryDropdownExpanded by remember { mutableStateOf(false) }
     val selectedCountryName = countries.entries.find { it.value == state.region }?.key ?: "🌍 All Countries"
 
+    var yearDropdownExpanded by remember { mutableStateOf(false) }
+    val currentYear = java.util.Calendar.getInstance().get(java.util.Calendar.YEAR)
+    val years = (currentYear downTo 1950).toList()
+    val selectedYearText = state.releaseYear?.toString() ?: "All Years"
+
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp)) {
         Text("${if (type==MediaType.MOVIE) "Movies" else "TV Shows"}", style = MaterialTheme.typography.titleLarge)
 
@@ -165,11 +170,60 @@ fun BrowseScreen(
         }
 
         Spacer(Modifier.height(12.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            AssistChip(onClick = { onSetRating(7.5) }, label = { Text("Rating ≥ 7.5") })
-            AssistChip(onClick = { onSetRating(null) }, label = { Text("Any Rating") })
-            AssistChip(onClick = { onSetYear(2017) }, label = { Text("Year: 2017") })
-            AssistChip(onClick = { onSetYear(null) }, label = { Text("Any Year") })
+        Text("Rating", style = MaterialTheme.typography.titleMedium)
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 8.dp)) {
+            FilterChip(
+                selected = state.minRating == 7.5,
+                onClick = { onSetRating(7.5) },
+                label = { Text("≥ 7.5") }
+            )
+            FilterChip(
+                selected = state.minRating == 8.0,
+                onClick = { onSetRating(8.0) },
+                label = { Text("≥ 8.0") }
+            )
+            FilterChip(
+                selected = state.minRating == null,
+                onClick = { onSetRating(null) },
+                label = { Text("Any Rating") }
+            )
+        }
+
+        Spacer(Modifier.height(16.dp))
+        Text("Release Year", style = MaterialTheme.typography.titleMedium)
+        ExposedDropdownMenuBox(
+            expanded = yearDropdownExpanded,
+            onExpandedChange = { yearDropdownExpanded = it },
+            modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
+        ) {
+            TextField(
+                value = selectedYearText,
+                onValueChange = {},
+                readOnly = true,
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = yearDropdownExpanded) },
+                modifier = Modifier.menuAnchor().fillMaxWidth()
+            )
+            ExposedDropdownMenu(
+                expanded = yearDropdownExpanded,
+                onDismissRequest = { yearDropdownExpanded = false }
+            ) {
+                DropdownMenuItem(
+                    text = { Text("All Years") },
+                    onClick = {
+                        onSetYear(null)
+                        yearDropdownExpanded = false
+                    }
+                )
+                years.forEach { year ->
+                    DropdownMenuItem(
+                        text = { Text(year.toString()) },
+                        onClick = {
+                            onSetYear(year)
+                            yearDropdownExpanded = false
+                        }
+                    )
+                }
+            }
         }
 
         Spacer(Modifier.height(16.dp))
