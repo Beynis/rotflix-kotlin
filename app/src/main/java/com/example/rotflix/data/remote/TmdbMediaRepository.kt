@@ -41,6 +41,14 @@ class TmdbMediaRepository : MediaRepository {
             "War" to 10752,
             "Western" to 37
         )
+
+        // TMDB Watch Provider IDs - these are the official IDs from TMDB API
+        private val PROVIDER_MAP = mapOf(
+            "Netflix" to 8,
+            "Prime Video" to 9,
+            "Disney+" to 337,
+            "Apple TV+" to 350
+        )
     }
     // Helper function to convert genre names to TMDB IDs
     private fun mapGenresToIds(genreNames: Set<String>): List<Int> {
@@ -49,11 +57,22 @@ class TmdbMediaRepository : MediaRepository {
         }
     }
 
+    // Helper function to convert provider names to TMDB IDs
+    private fun mapProvidersToIds(providerNames: Set<String>): List<Int> {
+        return providerNames.mapNotNull { providerName ->
+            PROVIDER_MAP[providerName]
+        }
+    }
+
 
     override suspend fun search(type: MediaType, filters: BrowseFilters) : List<MediaItem>{
         // Convert genre names to TMDB genre IDs
         val genreIds = mapGenresToIds(filters.genres)
         val genreString = genreIds.takeIf { it.isNotEmpty() }?.joinToString(",")
+
+        // Convert provider names to TMDB provider IDs
+        val providerIds = mapProvidersToIds(filters.providers)
+        val providerString = providerIds.takeIf { it.isNotEmpty() }?.joinToString("|")
 
         return when (type) {
             MediaType.MOVIE -> {
@@ -70,7 +89,9 @@ class TmdbMediaRepository : MediaRepository {
                         genres = genreString,
                         minRating = filters.minRating,
                         year = filters.releaseYear,
-                        region = filters.region
+                        region = filters.region,
+                        watchRegion = filters.region,
+                        providers = providerString
                     )
                 }
                 response.results.map { it.toMediaItem() }
@@ -87,7 +108,9 @@ class TmdbMediaRepository : MediaRepository {
                         genres = genreString,
                         minRating = filters.minRating,
                         year = filters.releaseYear,
-                        region = filters.region
+                        region = filters.region,
+                        watchRegion = filters.region,
+                        providers = providerString
                     )
                 }
                 response.results.map { it.toMediaItem() }

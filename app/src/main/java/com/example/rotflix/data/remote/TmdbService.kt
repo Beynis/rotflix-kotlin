@@ -13,6 +13,8 @@ interface TmdbService {
         @Query("vote_average.gte") minRating: Double? = null,
         @Query("primary_release_year") year: Int? = null,
         @Query("region") region: String? = null,
+        @Query("watch_region") watchRegion: String? = null,
+        @Query("with_watch_providers") providers: String? = null,
         @Query("sort_by") sortBy: String = "popularity.desc"
     ): TmdbSearchResponse<TmdbMovieResponse>
 
@@ -23,6 +25,8 @@ interface TmdbService {
         @Query("vote_average.gte") minRating: Double? = null,
         @Query("first_air_date_year") year: Int? = null,
         @Query("region") region: String? = null,
+        @Query("watch_region") watchRegion: String? = null,
+        @Query("with_watch_providers") providers: String? = null,
         @Query("sort_by") sortBy: String = "popularity.desc"
     ): TmdbSearchResponse<TmdbTvResponse>
 
